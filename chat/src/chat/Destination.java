@@ -4,18 +4,21 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+/***This class will handle client connections to a server***/
 public class Destination {
+	
 	private InetAddress dAddr;
 	private int dPort;
 	private Socket connection;
 	private PrintWriter out;
-//	private boolean isConnected;
 	
+	//Constructor for class Destination
 	public Destination(InetAddress dAddr, int dPort) {
 		this.dAddr = dAddr;
 		this.dPort = dPort;
 	}
 	
+	//Begin a connection between the client and server
 	public boolean startConnection() {
 		try {
 			this.connection = new Socket(this.dAddr, this.dPort);
@@ -26,6 +29,7 @@ public class Destination {
 		return this.connection.isConnected();
 	}
 
+	//getters and setters for the destination IP address and port
 	public InetAddress getdAddr() {
 		return dAddr;
 	}
@@ -42,12 +46,14 @@ public class Destination {
 		this.dPort = dPort;
 	}
 	
+	//methodd to send a message
 	public void sendMsg(String msg) {
 		if(this.connection.isConnected()) {
 			this.out.println(msg);
 		}
 	}
 	
+	//function that closes conneciton and returns a boolean that checks to see if the connection was successfully closed
 	public boolean closeConnection() {
 		if(this.out != null) {
 			this.out.close();

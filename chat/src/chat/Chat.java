@@ -42,6 +42,8 @@ public class Chat
 	}
 	
 	//requirement 4 --> connection
+	//uses arguments given by the user in the command line to establish a client connection with the server
+	//Checks issues that may arise while creating the connection such as invalid port numbers, ip addresses, or few arguments.
 	private void connect(String[] args) {
 		if(args != null && args.length == 3) {
 			try {
@@ -50,6 +52,7 @@ public class Chat
 				//Create variable to hold the port number
 				int dPort = Integer.parseInt(args[2]);
 				
+				//host object to create client server connection
 				Destination dHost = new Destination(dAddr,dPort);
 				
 				if(dHost.startConnection()) {
@@ -67,6 +70,7 @@ public class Chat
 	}
 	
 	//requirement 5 --> list the clients/hosts
+	//method lists all current clients connected to the server, or none if there are no client connections
 	private void listClients() {
 		System.out.println("id:\t IP Address \t Port No.");
 		if(dHosts.isEmpty()) {
@@ -81,6 +85,9 @@ public class Chat
 	}
 	
 	//requirement 6 --> send a message to a desired client/host
+	//function uses the arguements given during commmand line to send a messsage to the
+	// appropriate client via connection id
+	// watches for any errors that might arise during messagee transaction
 	public void send(String[] args) {
 		if(args.length > 2){
 			try {
@@ -104,7 +111,9 @@ public class Chat
 		}
 	}
 	
-	//requierment 7 --> termiante a client/host
+	//requirement 7 --> terminate a client/host
+	//method uses the argument of connection id (given during the command line) to find the client with the appropriate
+	//connection id and disconnect them from the Server process
 	public void terminate(String[] args) {
 		if(args != null) {
 			try {
@@ -128,6 +137,8 @@ public class Chat
 		}
 	}
 	
+	//method to begin the terminal menu --> will ask the user for their commands (i.e. connect, terminate, list, etc.)
+	//method will begin the server (and server thread) as well as the menu for the user to choose their action(s)
 	public void beginChat() {
 		Scanner scanner = new Scanner(System.in);
 		try {
@@ -186,6 +197,7 @@ public class Chat
 		}
 	}
 	
+	//Method to completely end the program, server.
 	private void closeAll() {
 		 for(Integer id : dHosts.keySet()){
 	            Destination destinationHost = dHosts.get(id);
@@ -196,6 +208,7 @@ public class Chat
 		
 	}
 
+	//Server Class
 	public class Server implements Runnable
 	{
 		BufferedReader in;
@@ -206,16 +219,19 @@ public class Chat
 	    @Override
 	    public void run() {
 	    	try {
+	    		//Create serverSocket object.
 	    		ServerSocket serverSocket = new ServerSocket(getMainPort());
 	    		System.out.println("Server is up"
 	    				+ "\n currently waiting for Client(s)...");
 	    		
+	    		//While the Server is active, we will accept Client Connections,
 	    		while(!this.isStopped) {
 	    			try {
 	    				this.socket = serverSocket.accept();
 	    				this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
 	    				System.out.println(this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + " :client has connected.");
 	    				Client clients = new Client(this.in, this.socket);
+	    				//Create a thread for the clients to run concurrently
 	    				Thread cThread = new Thread(clients);
 	    				cThread.start();
 	    				clientList.add(clients);
@@ -228,6 +244,7 @@ public class Chat
 	    	}
 	    }
 	    
+	    //function to stop the server
 	    public void stopServer() {
 	    	this.isStopped = !this.isStopped;
 	    	for(Client clients: clientList) {
@@ -237,6 +254,7 @@ public class Chat
 	    }
 	}
 
+	//Client class
 	public class Client implements Runnable{
 
 		private BufferedReader in;
@@ -250,10 +268,12 @@ public class Chat
 		
 		@Override
 		public void run() {
+			//While the client conneciton is active, the function will receive messages from other clients
 			while(!this.clientSocket.isClosed() && !this.isStopped) {
 				String str;
 				
 				try {
+					//Check for an empty message
 					str = in.readLine();
 					if(str == null) {
 						this.stop();
@@ -262,13 +282,14 @@ public class Chat
 						return;
 					}
 					
-					System.out.println("Message recievedd from " + this.clientSocket.getInetAddress().getHostAddress() + ": " + str);
+					System.out.println("Message recieved from " + this.clientSocket.getInetAddress().getHostAddress() + ": " + str);
 				}catch(IOException e) {
 					System.err.println(e.getStackTrace());
 				}
 			}
 		}
-
+		
+		//Function to terminate a client conneciton
 		private void stop() {
 			if(this.in != null)
                 try {
